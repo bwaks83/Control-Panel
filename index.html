@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="All company dashboards, operational tools, and Airtable workspaces in one place.">
+  <title>Dashboard Control Panel</title>
+  <style>
+    :root {
+      --background: #080b12;
+      --surface: #101722;
+      --surface-hover: #141e2c;
+      --border: #243044;
+      --text: #f5f7fb;
+      --muted: #94a3b8;
+      --faint: #64748b;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .shell {
+      isolation: isolate;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .shell::before {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, .035) 1px, transparent 1px);
+      background-size: 72px 72px;
+      content: "";
+      inset: 0;
+      mask-image: linear-gradient(to bottom, black, transparent 80%);
+      pointer-events: none;
+      position: absolute;
+      z-index: -2;
+    }
+
+    .ambient {
+      border-radius: 999px;
+      filter: blur(100px);
+      opacity: .12;
+      pointer-events: none;
+      position: absolute;
+      z-index: -1;
+    }
+
+    .ambient-one {
+      background: #2563eb;
+      height: 360px;
+      right: -160px;
+      top: -140px;
+      width: 420px;
+    }
+
+    .ambient-two {
+      background: #0891b2;
+      height: 300px;
+      left: -180px;
+      top: 520px;
+      width: 340px;
+    }
+
+    .topbar {
+      align-items: center;
+      border-bottom: 1px solid rgba(148, 163, 184, .14);
+      display: flex;
+      height: 76px;
+      justify-content: space-between;
+      margin: 0 auto;
+      max-width: 1240px;
+      padding: 0 32px;
+    }
+
+    .brand {
+      align-items: center;
+      color: inherit;
+      display: inline-flex;
+      font-size: 14px;
+      font-weight: 700;
+      gap: 12px;
+      letter-spacing: .04em;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      align-items: flex-end;
+      background: linear-gradient(145deg, #2563eb, #0ea5e9);
+      border-radius: 9px;
+      display: flex;
+      gap: 2px;
+      height: 30px;
+      justify-content: center;
+      padding: 8px;
+      width: 30px;
+    }
+
+    .brand-mark i {
+      background: white;
+      border-radius: 2px;
+      display: block;
+      width: 3px;
+    }
+
+    .brand-mark i:nth-child(1) { height: 6px; opacity: .7; }
+    .brand-mark i:nth-child(2) { height: 10px; opacity: .85; }
+    .brand-mark i:nth-child(3) { height: 14px; }
+
+    .status {
+      align-items: center;
+      color: var(--muted);
+      display: flex;
+      font-size: 12px;
+      gap: 8px;
+      letter-spacing: .04em;
+    }
+
+    .status-dot {
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, .1);
+      height: 7px;
+      width: 7px;
+    }
+
+    .resources {
+      margin: 0 auto;
+      max-width: 1240px;
+      padding: 72px 32px 96px;
+    }
+
+    .section-heading {
+      align-items: flex-end;
+      border-bottom: 1px solid rgba(148, 163, 184, .16);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+    }
+
+    .eyebrow {
+      color: #60a5fa;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      margin: 0 0 9px;
+      text-transform: uppercase;
+    }
+
+    .section-heading h1 {
+      font-size: 25px;
+      letter-spacing: -.035em;
+      margin: 0;
+    }
+
+    .section-heading > p {
+      color: var(--faint);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .resource-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .resource-card {
+      align-items: center;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, transparent), transparent 45%),
+        rgba(16, 23, 34, .82);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: inherit;
+      display: grid;
+      gap: 18px;
+      grid-template-columns: auto auto 1fr auto;
+      min-height: 170px;
+      overflow: hidden;
+      padding: 24px;
+      position: relative;
+      text-decoration: none;
+      transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+
+    .resource-card::before {
+      background: var(--accent);
+      content: "";
+      height: 2px;
+      left: 0;
+      opacity: .75;
+      position: absolute;
+      right: 100%;
+      top: 0;
+      transition: right 220ms ease;
+    }
+
+    .resource-card:hover {
+      background-color: var(--surface-hover);
+      border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+      transform: translateY(-3px);
+    }
+
+    .resource-card:hover::before { right: 0; }
+
+    .resource-card:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+      outline-offset: 3px;
+    }
+
+    .miami { --accent: #3b82f6; }
+    .orlando { --accent: #f59e0b; }
+    .catalog { --accent: #34d399; }
+
+    .card-number {
+      align-self: start;
+      color: var(--faint);
+      font-family: monospace;
+      font-size: 11px;
+    }
+
+    .card-icon {
+      align-items: center;
+      background: color-mix(in srgb, var(--accent) 13%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 12px;
+      color: var(--accent);
+      display: flex;
+      font-size: 12px;
+      font-weight: 800;
+      height: 46px;
+      justify-content: center;
+      letter-spacing: .08em;
+      width: 46px;
+    }
+
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .category {
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .15em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
+    .card-description {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .arrow {
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--muted);
+      display: flex;
+      font-size: 15px;
+      height: 34px;
+      justify-content: center;
+      transition: border-color 180ms ease, color 180ms ease, transform 180ms ease;
+      width: 34px;
+    }
+
+    .resource-card:hover .arrow {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translate(2px, -2px);
+    }
+
+    footer {
+      border-top: 1px solid rgba(148, 163, 184, .14);
+      color: var(--faint);
+      display: flex;
+      font-size: 11px;
+      justify-content: space-between;
+      margin: 0 auto;
+      max-width: 1176px;
+      padding: 28px 0 36px;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 780px) {
+      .topbar, .resources {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .resources { padding-top: 52px; }
+
+      .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .resource-grid { grid-template-columns: 1fr; }
+      footer { margin: 0 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .status { display: none; }
+
+      .resource-card {
+        gap: 14px;
+        grid-template-columns: auto 1fr auto;
+        min-height: 154px;
+        padding: 20px;
+      }
+
+      .card-number { display: none; }
+      .card-icon { height: 40px; width: 40px; }
+      .card-description { font-size: 13px; }
+      footer { flex-direction: column; gap: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#resources" aria-label="Dashboard Control Panel home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Control Panel</span>
+      </a>
+      <div class="status"><span class="status-dot" aria-hidden="true"></span>Company resources</div>
+    </header>
+
+    <section class="resources" id="resources" aria-labelledby="resources-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Quick access</p>
+          <h1 id="resources-title">Company resources</h1>
+        </div>
+        <p>Select a destination to open it in a new tab.</p>
+      </div>
+
+      <div class="resource-grid">
+        <a class="resource-card miami" href="https://miami-dashboard-eight.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open Miami Dashboard in a new tab">
+          <span class="card-number">01</span><span class="card-icon" aria-hidden="true">MI</span>
+          <span class="card-content"><span class="category">Dashboard</span><span class="card-title">Miami Dashboard</span><span class="card-description">Sales, operations, and financial performance for Miami.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="resource-card orlando" href="https://orlando-dash.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open Orlando Dashboard in a new tab">
+          <span class="card-number">02</span><span class="card-icon" aria-hidden="true">OR</span>
+          <span class="card-content"><span class="category">Dashboard</span><span class="card-title">Orlando Dashboard</span><span class="card-description">Sales, operations, and financial performance for Orlando.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="resource-card miami" href="https://visits-eta.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open Technician Visits in a new tab">
+          <span class="card-number">03</span><span class="card-icon" aria-hidden="true">TV</span>
+          <span class="card-content"><span class="category">Field operations</span><span class="card-title">Technician Visits</span><span class="card-description">Track field visits, schedules, and technician activity.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="resource-card miami" href="https://miami-installations.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open Miami Installations in a new tab">
+          <span class="card-number">04</span><span class="card-icon" aria-hidden="true">IN</span>
+          <span class="card-content"><span class="category">Operations</span><span class="card-title">Miami Installations</span><span class="card-description">Review and manage the Miami installation pipeline.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="resource-card orlando" href="https://orlando-control.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open Orlando Financeiro in a new tab">
+          <span class="card-number">05</span><span class="card-icon" aria-hidden="true">FI</span>
+          <span class="card-content"><span class="category">Finance</span><span class="card-title">Orlando Financeiro</span><span class="card-description">Open Orlando's finance and administrative controls.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="resource-card catalog" href="https://scent-catalog.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open Scent Catalog in a new tab">
+          <span class="card-number">06</span><span class="card-icon" aria-hidden="true">SC</span>
+          <span class="card-content"><span class="category">Catalog</span><span class="card-title">Scent Catalog</span><span class="card-description">Browse the complete scent collection and available fragrances.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="resource-card miami" href="https://airtable.com/appPzeuPqekWJV5wR/shrDDnD4r0v3nW8Vm" target="_blank" rel="noopener noreferrer" aria-label="Open Miami Airtable in a new tab">
+          <span class="card-number">07</span><span class="card-icon" aria-hidden="true">AT</span>
+          <span class="card-content"><span class="category">Airtable</span><span class="card-title">Miami Airtable</span><span class="card-description">Access the Miami operational database in Airtable.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="resource-card orlando" href="https://airtable.com/appqzyIwi0Wb4e6eN/shr21WMCGeBdWgPqw" target="_blank" rel="noopener noreferrer" aria-label="Open Orlando Airtable in a new tab">
+          <span class="card-number">08</span><span class="card-icon" aria-hidden="true">AT</span>
+          <span class="card-content"><span class="category">Airtable</span><span class="card-title">Orlando Airtable</span><span class="card-description">Access the Orlando operational database in Airtable.</span></span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </section>
+
+    <footer><span>Dashboard Control Panel</span><span>Miami · Orlando</span></footer>
+  </main>
+</body>
+</html>
